@@ -8,6 +8,7 @@ class SimpleCurlServiceProvider extends ServiceProvider {
 
   /**
    * Bootstrap the application services.
+   *
    * @return void
    */
   public function boot() {
@@ -16,6 +17,7 @@ class SimpleCurlServiceProvider extends ServiceProvider {
 
   /**
    * Register the application services.
+   *
    * @return void
    */
   public function register() {
@@ -24,7 +26,8 @@ class SimpleCurlServiceProvider extends ServiceProvider {
 
   /**
    * Registers Facade
-   * @return larablog
+   *
+   * @return SimpleCurl
    */
   private function registerSimpleCurl() {
     $this->app->bind('simplecurl', function ($app) {
