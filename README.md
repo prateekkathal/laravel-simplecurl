@@ -9,7 +9,7 @@ For making simple GET/POST/PUT/DELETE requests.
 
 use SimpleCurl;
 
-public class {
+class UsersApiRepo {
 
   function __construct() {
     $simpleCurl = new SimpleCurl;
@@ -30,7 +30,7 @@ public class {
 
 use SimpleCurl;
 
-public class {
+class UsersApiRepo {
 
   function __construct() {
     $simpleCurl = new SimpleCurl;
