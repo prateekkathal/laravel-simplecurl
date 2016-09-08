@@ -2,6 +2,8 @@
 
 namespace PrateekKathal\SimpleCurl;
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
 class SimpleCurl {
 
   protected $config, $response, $url, $headers;
@@ -206,6 +208,74 @@ class SimpleCurl {
   }
 
   /**
+   * Get Response as Collection
+   *
+   * @return Collection
+   */
+  public function getResponseAsCollection() {
+    $response = $this->getResponseAsArray();
+    return ($response) ? collect($response) : FALSE;
+  }
+
+  /**
+   * Get Response as Model
+   *
+   * @param  string $modelName
+   *
+   * @return Model
+   */
+  public function getResponseAsModel($modelName, $nonFillableKeys = []) {
+    $response = $this->getResponseAsJson();
+    return ($response) ? $this->transformResponseToModel($modelName, $response, $nonFillableKeys) : FALSE;
+  }
+
+  /**
+   * Transform Curl Response to its Corresponding Model
+   *
+   * @param  string $modelName
+   * @param  JSON $response
+   *
+   * @return Model
+   */
+  private function transformResponseToModel($modelName, $response, $nonFillableKeys = []) {
+    $this->checkIfModelExists($modelName);
+    $model = new $modelName;
+    $fillableElements = $model->getFillable();
+
+    $modelKeys = array_filter($fillableElements, function($fillable) use ($response) {
+      foreach ($response as $key => $value) {
+        if($key == $fillable || $key == 'created_at' || $key == 'updated_at')
+          return $key;
+      }
+    });
+
+    $modelKeys = array_merge($modelKeys, $nonFillableKeys);
+
+    if(count($modelKeys) > 0) {
+      foreach($modelKeys as $modelKey) {
+        $value = isset($response->$modelKey) ? $response->$modelKey : null;
+        $model->setAttribute($modelKey, $value);
+      }
+    }
+
+    return $model;
+  }
+
+  /**
+   * Check if Model Exists
+   *
+   * @param  string $modelName
+   *
+   * @return boolean
+   */
+  private function checkIfModelExists($modelName) {
+    if(!class_exists($modelName)) {
+      throw new ModelNotFoundException($modelName. ' not found!');
+    }
+    return TRUE;
+  }
+
+  /**
    * CURL Request
    *
    * @param  string $type
@@ -247,11 +317,13 @@ class SimpleCurl {
       curl_close ($ch);
 
     	if ($httpCode == "200") {
-        return $this->response = ['status' => 'success', 'result' => $result];
+        $this->response = ['status' => 'success', 'result' => $result];
     	}
-      return $this->response = ['status' => 'failed', 'result' => $result, 'error_code' => $httpCode, 'request_size' => $requestSize, 'curl_error' => $curlError];
+      $this->response = ['status' => 'failed', 'result' => $result, 'error_code' => $httpCode, 'request_size' => $requestSize, 'curl_error' => $curlError];
+      return $this;
     } catch (Exception $e) {
-      return $this->response = ['status' => 'error', 'result' => $e];
+      $this->response = ['status' => 'error', 'result' => $e];
+      return $this;
     }
   }
 
