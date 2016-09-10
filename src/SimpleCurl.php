@@ -2,21 +2,45 @@
 
 namespace PrateekKathal\SimpleCurl;
 
+use PrateekKathal\SimpleCurl\ResponseTransformer;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class SimpleCurl {
 
-  protected $config, $response, $url, $headers;
+  /**
+   * Config Variable
+   *
+   * @var array
+   */
+  protected $config;
+
+  /**
+   * CURL Response
+   *
+   * @var array
+   */
+  protected $response;
+
+  /**
+   * URL of CURL request
+   *
+   * @var string
+   */
+  protected $url;
+
+  /**
+   * Headers sent in CURL Request
+   *
+   * @var array
+   */
+  protected $headers;
 
   /**
    * SimpleCurl Constructor
    *
    * @param string $app
    */
-  public function __construct($app = '') {
-    if(!empty($app)) {
-      $this->app = $app;
-    }
+  public function __construct() {
     $this->config = [
       'connectTimeout' => 10,
       'dataTimeout' => 30,
@@ -26,6 +50,7 @@ class SimpleCurl {
     ];
     $this->response = $this->url = '';
     $this->headers = [];
+    $this->responseTransformer = new ResponseTransformer;
   }
 
   /**
@@ -98,7 +123,7 @@ class SimpleCurl {
       return $this->response = ['status' => 'error', 'message' => 'Data must be in the form of an array', 'result' => []];
     }
     if(!is_array($this->getAllHeaders($headers))) {
-      return $this->response = ['status' => 'error', 'message' => 'Data must be in the form of an array', 'result' => []];
+      return $this->response = ['status' => 'error', 'message' => 'Headers must be in the form of an array', 'result' => []];
     }
   }
 
@@ -107,7 +132,7 @@ class SimpleCurl {
    *
    * @param  array $config
    *
-   * @return array
+   * @return SimpleCurl
    */
   public function setConfig($config = []) {
     foreach($config as $key => $value) {
@@ -130,6 +155,23 @@ class SimpleCurl {
         default: break;
       }
     }
+    return $this;
+  }
+
+  /**
+   * Reset Config Variables
+   *
+   * @return SimpleCurl
+   */
+  public function resetConfig() {
+    $this->config = [
+      'connectTimeout' => 10,
+      'dataTimeout' => 30,
+      'userAgent' => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
+      'baseUrl' => '',
+      'defaultHeaders' => [],
+    ];
+    return $this;
   }
 
   /**
@@ -137,10 +179,11 @@ class SimpleCurl {
    *
    * @param  string $url
    *
-   * @return string
+   * @return SimpleCurl
    */
   public function setBaseUrl($url) {
-    return $this->config['baseUrl'] = $url;
+    $this->config['baseUrl'] = $url;
+    return $this;
   }
 
   /**
@@ -189,10 +232,7 @@ class SimpleCurl {
    * @return JSON
    */
   public function getResponseAsJson() {
-    if(is_string($this->response['result'])) {
-      return json_decode($this->response['result']);
-    }
-    return FALSE;
+    return $this->responseTransformer->setResponse($this->response)->toJson();
   }
 
   /**
@@ -201,10 +241,7 @@ class SimpleCurl {
    * @return array
    */
   public function getResponseAsArray() {
-    if(is_string($this->response['result'])) {
-      return json_decode($this->response['result'], TRUE);
-    }
-    return FALSE;
+    return $this->responseTransformer->setResponse($this->response)->toArray();
   }
 
   /**
@@ -213,8 +250,7 @@ class SimpleCurl {
    * @return Collection
    */
   public function getResponseAsCollection() {
-    $response = $this->getResponseAsArray();
-    return ($response) ? collect($response) : FALSE;
+    return $this->responseTransformer->setResponse($this->response)->toCollection();
   }
 
   /**
@@ -224,55 +260,19 @@ class SimpleCurl {
    *
    * @return Model
    */
-  public function getResponseAsModel($modelName, $nonFillableKeys = []) {
-    $response = $this->getResponseAsJson();
-    return ($response) ? $this->transformResponseToModel($modelName, $response, $nonFillableKeys) : FALSE;
+  public function getResponseAsModel($modelName, $nonFillableKeys = [], $relations = []) {
+    return $this->responseTransformer->setResponse($this->response)->toModel($modelName, $nonFillableKeys, $relations);
   }
 
   /**
-   * Transform Curl Response to its Corresponding Model
-   *
-   * @param  string $modelName
-   * @param  JSON $response
-   *
-   * @return Model
-   */
-  private function transformResponseToModel($modelName, $response, $nonFillableKeys = []) {
-    $this->checkIfModelExists($modelName);
-    $model = new $modelName;
-    $fillableElements = $model->getFillable();
-
-    $modelKeys = array_filter($fillableElements, function($fillable) use ($response) {
-      foreach ($response as $key => $value) {
-        if($key == $fillable || $key == 'created_at' || $key == 'updated_at')
-          return $key;
-      }
-    });
-
-    $modelKeys = array_merge($modelKeys, $nonFillableKeys);
-
-    if(count($modelKeys) > 0) {
-      foreach($modelKeys as $modelKey) {
-        $value = isset($response->$modelKey) ? $response->$modelKey : null;
-        $model->setAttribute($modelKey, $value);
-      }
-    }
-
-    return $model;
-  }
-
-  /**
-   * Check if Model Exists
+   * Get Response as Model
    *
    * @param  string $modelName
    *
-   * @return boolean
+   * @return LengthAwarePaginator
    */
-  private function checkIfModelExists($modelName) {
-    if(!class_exists($modelName)) {
-      throw new ModelNotFoundException($modelName. ' not found!');
-    }
-    return TRUE;
+  public function getPaginatedResponse($perPage = 10) {
+    return $this->responseTransformer->setResponse($this->response)->toPaginated($perPage);
   }
 
   /**
@@ -319,7 +319,7 @@ class SimpleCurl {
     	if ($httpCode == "200") {
         $this->response = ['status' => 'success', 'result' => $result];
     	}
-      $this->response = ['status' => 'failed', 'result' => $result, 'error_code' => $httpCode, 'request_size' => $requestSize, 'curl_error' => $curlError];
+      $this->response = ['status' => 'failed', 'error_code' => $httpCode, 'request_size' => $requestSize, 'curl_error' => $curlError, 'url' => $url, 'result' => $result];
       return $this;
     } catch (Exception $e) {
       $this->response = ['status' => 'error', 'result' => $e];
