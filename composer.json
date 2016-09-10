@@ -1,7 +1,7 @@
 {
     "name": "prateekkathal/laravel-simplecurl",
     "description": "A Laravel package for handling simple CURL requests",
-    "keywords": ["curl", "php"],
+    "keywords": ["curl", "php", "laravel"],
     "type": "project",
     "authors": [
         {
