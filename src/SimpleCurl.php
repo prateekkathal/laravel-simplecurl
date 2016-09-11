@@ -3,7 +3,6 @@
 namespace PrateekKathal\SimpleCurl;
 
 use PrateekKathal\SimpleCurl\ResponseTransformer;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class SimpleCurl {
 
@@ -76,7 +75,7 @@ class SimpleCurl {
    *
    * @return array
    */
-  public function post($url, $data = [], $headers = [], $file = '') {
+  public function post($url, $data = [], $headers = [], $file = false) {
     return $this->request('POST', $this->getFullUrl($url), $data, $this->getAllHeaders($headers), $file);
   }
 
@@ -227,6 +226,78 @@ class SimpleCurl {
   }
 
   /**
+   * Get Response HTTP Code
+   *
+   * @return int
+   */
+  public function getResponseCode() {
+    return $this->response['http_code'];
+  }
+
+  /**
+   * Get Response Content Type
+   *
+   * @return sting
+   */
+  public function getResponseContentType() {
+    return $this->response['content_type'];
+  }
+
+  /**
+   * Get Request Size
+   *
+   * @return sting
+   */
+  public function getRequestSize() {
+    return $this->response['request_size'];
+  }
+
+  /**
+   * Get Request URL
+   *
+   * @return string
+   */
+  public function getRequestUrl() {
+    return $this->response['url'];
+  }
+
+  /**
+   * Get Curl Error
+   *
+   * @return string
+   */
+  public function getCurlError() {
+    return $this->response['curl_error'];
+  }
+
+  /**
+   * Get Redirect Count
+   *
+   * @return int
+   */
+  public function getRedirectCount() {
+    return $this->response['redirect_count'];
+  }
+
+  /**
+   * Get Last Effective URL
+   *
+   * @return string
+   */
+  public function getEffectiveUrl() {
+    return $this->response['effective_url'];
+  }
+
+  /**
+   * Get Time Taken for the CURL Request
+   *
+   * @return float
+   */
+  public function getTotalTime() {
+    return $this->response['total_time'];
+  }
+
+  /**
    * GET Response as JSON
    *
    * @return JSON
@@ -286,7 +357,7 @@ class SimpleCurl {
    *
    * @return array
    */
-  private function request($type, $url, $data = '', $headers = [], $file = '') {
+  private function request($type, $url, $data = '', $headers = [], $file = false) {
     try {
     	$ch = curl_init();
     	curl_setopt ($ch, CURLOPT_URL, $url);
@@ -296,7 +367,7 @@ class SimpleCurl {
       }
       if($type == 'POST' && !empty($data)) {
         curl_setopt ($ch, CURLOPT_POST, 1);
-        if((!empty($file) && !empty($data[$file])) || in_array('Content-Type: application/json', $this->headers)) {
+        if((!empty($file) || in_array('Content-Type: application/json', $this->headers)) {
           curl_setopt ($ch, CURLOPT_POSTFIELDS, $data);
         } else {
           curl_setopt ($ch, CURLOPT_POSTFIELDS, http_build_query($data));
@@ -313,16 +384,30 @@ class SimpleCurl {
     	$result = curl_exec ($ch);
     	$httpCode = curl_getinfo ($ch, CURLINFO_HTTP_CODE);
       $requestSize = curl_getinfo ($ch, CURLINFO_REQUEST_SIZE);
+      $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+      $redirectCount = curl_getinfo($ch, CURLINFO_REDIRECT_COUNT);
+      $effectiveUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+      $totalTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
       $curlError = curl_error($ch);
       curl_close ($ch);
 
+      $this->response = [
+        'http_code' => $httpCode, 'request_size' => $requestSize, 'curl_error' => $curlError,
+        'url' => $url, 'content_type' => $contentType, 'redirect_count' => $redirectCount,
+        'effective_url' => $effectiveUrl, 'total_time' => $totalTime, 'result' => $result
+      ];
     	if ($httpCode == "200") {
-        $this->response = ['status' => 'success', 'result' => $result];
-    	}
-      $this->response = ['status' => 'failed', 'error_code' => $httpCode, 'request_size' => $requestSize, 'curl_error' => $curlError, 'url' => $url, 'result' => $result];
+        $this->response['status'] = 'success';
+      } else {
+        $this->response['status'] = 'failed';
+      }
       return $this;
     } catch (Exception $e) {
-      $this->response = ['status' => 'error', 'result' => $e];
+      $this->response = [
+        'http_code' => null, 'request_size' => null, 'curl_error' => null,
+        'url' => $url, 'content_type' => null, 'redirect_count' => null,
+        'effective_url' => null, 'total_time' => null, 'result' => $e
+      ];
       return $this;
     }
   }
