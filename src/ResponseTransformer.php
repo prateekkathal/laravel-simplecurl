@@ -259,7 +259,7 @@ class ResponseTransformer {
    */
   private function checkIfModelExists($modelName) {
     if(!class_exists($modelName)) {
-      throw new ModelNotFoundException('Class' .$modelName. ' not found');
+      throw new ModelNotFoundException('Class ' .$modelName. ' not found');
     }
     return TRUE;
   }
