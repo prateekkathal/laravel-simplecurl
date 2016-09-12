@@ -367,7 +367,7 @@ class SimpleCurl {
       }
       if($type == 'POST' && !empty($data)) {
         curl_setopt ($ch, CURLOPT_POST, 1);
-        if((!empty($file) || in_array('Content-Type: application/json', $this->headers)) {
+        if(!empty($file) || in_array('Content-Type: application/json', $this->headers)) {
           curl_setopt ($ch, CURLOPT_POSTFIELDS, $data);
         } else {
           curl_setopt ($ch, CURLOPT_POSTFIELDS, http_build_query($data));
