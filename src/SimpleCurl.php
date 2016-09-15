@@ -2,6 +2,7 @@
 
 namespace PrateekKathal\SimpleCurl;
 
+use \Exception;
 use PrateekKathal\SimpleCurl\ResponseTransformer;
 
 class SimpleCurl {
@@ -46,6 +47,7 @@ class SimpleCurl {
       'userAgent' => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
       'baseUrl' => '',
       'defaultHeaders' => [],
+      'defaultDataKey' => '',
     ];
     $this->response = $this->url = '';
     $this->headers = [];
@@ -106,27 +108,6 @@ class SimpleCurl {
   }
 
   /**
-   * Validate Inputs Before Sending CURL Request
-   *
-   * @param  string $url
-   * @param  array $data
-   * @param  array $headers
-   *
-   * @return array
-   */
-  private function validateInputs($url, $data = [], $headers = []) {
-    if(empty($this->getFullUrl($url))) {
-      return $this->response = ['status' => 'error', 'message' => 'No URL Given', 'result' => []];
-    }
-    if(!is_array($data)) {
-      return $this->response = ['status' => 'error', 'message' => 'Data must be in the form of an array', 'result' => []];
-    }
-    if(!is_array($this->getAllHeaders($headers))) {
-      return $this->response = ['status' => 'error', 'message' => 'Headers must be in the form of an array', 'result' => []];
-    }
-  }
-
-  /**
    * Set Config Variables
    *
    * @param  array $config
@@ -137,19 +118,28 @@ class SimpleCurl {
     foreach($config as $key => $value) {
       switch($key) {
         case 'connectTimeout':
+          $this->validateInputs('connectTimeout', $config['connectTimeout']);
           $this->config['connectTimeout'] = $config['connectTimeout'];
           break;
         case 'dataTimeout':
+          $this->validateInputs('dataTimeout', $config['dataTimeout']);
           $this->config['dataTimeout'] = $config['dataTimeout'];
           break;
         case 'userAgent':
+          $this->validateInputs('userAgent', $config['userAgent']);
           $this->config['userAgent'] = $config['userAgent'];
           break;
         case 'baseUrl':
+          $this->validateInputs('baseUrl', $config['baseUrl']);
           $this->config['baseUrl'] = $config['baseUrl'];
           break;
         case 'defaultHeaders':
+          $this->validateInputs('defaultHeaders', $config['defaultHeaders']);
           $this->config['defaultHeaders'] = $config['defaultHeaders'];
+          break;
+        case 'defaultDataKey':
+          $this->validateInputs('defaultDataKey', $config['defaultDataKey']);
+          $this->config['defaultDataKey'] = $config['defaultDataKey'];
           break;
         default: break;
       }
@@ -169,6 +159,7 @@ class SimpleCurl {
       'userAgent' => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
       'baseUrl' => '',
       'defaultHeaders' => [],
+      'defaultDataKey' => '',
     ];
     return $this;
   }
@@ -181,7 +172,19 @@ class SimpleCurl {
    * @return SimpleCurl
    */
   public function setBaseUrl($url) {
+    $this->validateInputs('baseUrl', $url);
     $this->config['baseUrl'] = $url;
+    return $this;
+  }
+
+  /**
+   * Set Default Data Key
+   *
+   * @param string $key
+   */
+  public function setDataKey($key) {
+    $this->validateInputs('defaultDataKey', $url);
+    $this->config['defaultDataKey'] = $key;
     return $this;
   }
 
@@ -217,12 +220,21 @@ class SimpleCurl {
   }
 
   /**
+   * Get Curl Result
+   *
+   * @return array
+   */
+  public function getCurlResult() {
+    return $this->response;
+  }
+
+  /**
    * Get Response
    *
    * @return array
    */
   public function getResponse() {
-    return $this->response;
+    return $this->response['result'];
   }
 
   /**
@@ -298,12 +310,23 @@ class SimpleCurl {
   }
 
   /**
+   * Get Default Data Key
+   *
+   * @return string
+   */
+  public function getDataKey() {
+    return $this->config['defaultDataKey'];
+  }
+
+  /**
    * GET Response as JSON
    *
    * @return JSON
    */
   public function getResponseAsJson() {
-    return $this->responseTransformer->setResponse($this->response)->toJson();
+    return $this->responseTransformer
+                ->setResponse($this->getResponse(), $this->getDataKey())
+                ->toJson();
   }
 
   /**
@@ -312,7 +335,9 @@ class SimpleCurl {
    * @return array
    */
   public function getResponseAsArray() {
-    return $this->responseTransformer->setResponse($this->response)->toArray();
+    return $this->responseTransformer
+                ->setResponse($this->getResponse(), $this->getDataKey())
+                ->toArray();
   }
 
   /**
@@ -321,7 +346,9 @@ class SimpleCurl {
    * @return Collection
    */
   public function getResponseAsCollection() {
-    return $this->responseTransformer->setResponse($this->response)->toCollection();
+    return $this->responseTransformer
+                ->setResponse($this->getResponse(), $this->getDataKey())
+                ->toCollection();
   }
 
   /**
@@ -332,7 +359,9 @@ class SimpleCurl {
    * @return Model
    */
   public function getResponseAsModel($modelName, $nonFillableKeys = [], $relations = []) {
-    return $this->responseTransformer->setResponse($this->response)->toModel($modelName, $nonFillableKeys, $relations);
+    return $this->responseTransformer
+                ->setResponse($this->getResponse(), $this->getDataKey())
+                ->toModel($modelName, $nonFillableKeys, $relations);
   }
 
   /**
@@ -343,7 +372,9 @@ class SimpleCurl {
    * @return LengthAwarePaginator
    */
   public function getPaginatedResponse($perPage = 10) {
-    return $this->responseTransformer->setResponse($this->response)->toPaginated($perPage);
+    return $this->responseTransformer
+                ->setResponse($this->getResponse(), $this->getDataKey())
+                ->toPaginated($perPage);
   }
 
   /**
@@ -357,8 +388,10 @@ class SimpleCurl {
    *
    * @return array
    */
-  private function request($type, $url, $data = '', $headers = [], $file = false) {
+  private function request($type, $url, $data = [], $headers = [], $file = false) {
     try {
+      $this->validateInputs('fullUrl', $url);
+
     	$ch = curl_init();
     	curl_setopt ($ch, CURLOPT_URL, $url);
     	curl_setopt ($ch, CURLOPT_USERAGENT, $this->config['userAgent']);
@@ -409,6 +442,49 @@ class SimpleCurl {
         'effective_url' => null, 'total_time' => null, 'result' => $e
       ];
       return $this;
+    }
+  }
+
+  /**
+   * Validate Inputs Before Sending CURL Request
+   *
+   * @param  string $url
+   * @param  array $data
+   * @param  array $headers
+   *
+   * @return array
+   */
+  private function validateInputs($type, $data) {
+    switch ($type) {
+      case 'connectTimeout':  if(!is_integer($data))
+                                throw new \Exception('Connect Timeout must an integer');
+
+                              break;
+      case 'dataTimeout':     if(!is_integer($data))
+                                throw new \Exception('Data Timeout must an integer');
+
+                              break;
+      case 'userAgent':       if(!is_string($data))
+                                throw new \Exception('User Agent must be a string');
+
+                              break;
+      case 'baseUrl':
+      case 'fullUrl':         if(empty($data))
+                                throw new \Exception('URL must not be empty');
+
+                              if(!is_string($data))
+                                throw new \Exception('URL must be a string');
+
+                              break;
+      case 'defaultHeaders':  if(!is_array($data))
+                                throw new \Exception('Headers must be an array');
+
+                              break;
+      case 'defaultDataKey':  if(!is_string($data))
+                                throw new \Exception('Default Data Key must be a string');
+
+                              break;
+      default:                break;
     }
   }
 

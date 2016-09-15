@@ -8,15 +8,28 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ResponseTransformer {
 
-  protected $response = [];
+  /**
+   * Response Variable
+   *
+   * @var string
+   */
+  protected $response = '';
+
+  /**
+   * Default Data Key In Response For making Collections/Models etc
+   *
+   * @var string
+   */
+  protected $dataKey = '';
 
   /**
    * Set the response for this class from the CURL Request
    *
-   * @param array $response
+   * @param string $response
    */
-  public function setResponse($response) {
+  public function setResponse($response, $dataKey = '') {
     $this->response = $response;
+    $this->dataKey = (!empty($dataKey)) ? $dataKey : '';
     return $this;
   }
 
@@ -26,8 +39,9 @@ class ResponseTransformer {
    * @return JSON
    */
   public function toJson() {
-    if(is_string($this->response['result'])) {
-      return json_decode($this->response['result']);
+    if(is_string($this->response)) {
+      $response = json_decode($this->response);
+      return ($response && !empty($this->dataKey)) ? (!empty($response->{$this->dataKey})) ? $response->{$this->dataKey} : null : $response;
     }
     return FALSE;
   }
@@ -38,8 +52,9 @@ class ResponseTransformer {
    * @return array
    */
   public function toArray() {
-    if(is_string($this->response['result'])) {
-      return json_decode($this->response['result'], TRUE);
+    if(is_string($this->response)) {
+      $response = json_decode($this->response, TRUE);
+      return ($response && !empty($this->dataKey)) ? (!empty($response[$this->dataKey])) ? $response[$this->dataKey] : null : $response;
     }
     return FALSE;
   }
