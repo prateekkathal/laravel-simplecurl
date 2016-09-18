@@ -64,8 +64,13 @@ class ResponseTransformer {
    *
    * @return Collection
    */
-  public function toCollection() {
-    $response = $this->toArray();
+  public function toCollection($model = null) {
+    $response = $this->toJson();
+
+    if($model && $response) {
+      return $this->responseArrayToModelCollection($model, $response);
+    }
+
     return ($response) ? ($this->checkIfAllAreArray($response)) ? collect($response) : collect([$response]) : FALSE;
   }
 
@@ -95,11 +100,12 @@ class ResponseTransformer {
    */
   private function checkIfAllAreArray(array $response) {
     foreach ($response as $key => $value) {
-      if(!is_array($value) || is_string($value)) {
+      if(!is_object($value) || is_string($value)) {
         return false;
         break;
       }
     }
+    return true;
   }
 
   /**

@@ -216,7 +216,7 @@ class SimpleCurl {
    * @return array
    */
   public function getAllHeaders($headers) {
-    return $this->headers = array_merge($this->config['defaultHeaders'], $this->headers);
+    return array_merge($this->config['defaultHeaders'], $headers);
   }
 
   /**
@@ -345,10 +345,10 @@ class SimpleCurl {
    *
    * @return Collection
    */
-  public function getResponseAsCollection() {
+  public function getResponseAsCollection($model = null) {
     return $this->responseTransformer
                 ->setResponse($this->getResponse(), $this->getDataKey())
-                ->toCollection();
+                ->toCollection($model);
   }
 
   /**
