@@ -43,7 +43,7 @@ class ResponseTransformer {
       $response = json_decode($this->response);
       return ($response && !empty($this->dataKey)) ? (!empty($response->{$this->dataKey})) ? $response->{$this->dataKey} : null : $response;
     }
-    return FALSE;
+    return null;
   }
 
   /**
@@ -56,7 +56,7 @@ class ResponseTransformer {
       $response = json_decode($this->response, TRUE);
       return ($response && !empty($this->dataKey)) ? (!empty($response[$this->dataKey])) ? $response[$this->dataKey] : null : $response;
     }
-    return FALSE;
+    return null;
   }
 
   /**
@@ -71,7 +71,7 @@ class ResponseTransformer {
       return $this->responseArrayToModelCollection($model, $response);
     }
 
-    return ($response) ? ($this->checkIfAllAreArray($response)) ? collect($response) : collect([$response]) : FALSE;
+    return ($response) ? ($this->checkIfAllAreArray($response)) ? collect($response) : collect([$response]) : collect([]);
   }
 
   /**
@@ -119,7 +119,7 @@ class ResponseTransformer {
    */
   public function toModel($modelName, $nonFillableKeys = [], $relations = []) {
     $response = $this->toJson();
-    return ($response) ? $this->toModelWithRelations($modelName, $response, $nonFillableKeys, $relations) : FALSE;
+    return ($response) ? $this->toModelWithRelations($modelName, $response, $nonFillableKeys, $relations) : null;
   }
 
   /**

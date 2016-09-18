@@ -115,6 +115,7 @@ class SimpleCurl {
    * @return SimpleCurl
    */
   public function setConfig($config = []) {
+    $this->resetConfig();
     foreach($config as $key => $value) {
       switch($key) {
         case 'connectTimeout':
@@ -185,6 +186,17 @@ class SimpleCurl {
   public function setDataKey($key) {
     $this->validateInputs('defaultDataKey', $url);
     $this->config['defaultDataKey'] = $key;
+    return $this;
+  }
+
+  /**
+   * Set Default Data Key
+   *
+   * @param string $key
+   */
+  public function setDefaultHeaders($headers) {
+    $this->validateInputs('defaultHeaders', $headers);
+    $this->config['defaultHeaders'] = $headers;
     return $this;
   }
 
