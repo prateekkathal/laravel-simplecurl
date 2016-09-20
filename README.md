@@ -151,7 +151,7 @@ class UsersApiRepo {
   /*
    * A Config Variable which you can use to handle multiple CURL requests...
    */
-  protected simpleCurlConfig;
+  protected $simpleCurlConfig;
 
   function __construct() {
     $this->simpleCurlConfig = [
