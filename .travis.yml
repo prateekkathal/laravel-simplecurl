@@ -8,8 +8,6 @@ php:
   - 7.0
   - hhvm
 
-sudo: false
-
 matrix:
   fast_finish: true
 
@@ -27,12 +25,9 @@ install:
   - export DB_USERNAME=travis DB_DATABASE=hyn DB_PASSWORD= QUEUE_DRIVER=sync
   # specify the laravel service providers to insert
   - export PACKAGE_PROVIDER="
-    Kevupton\\\\Bookings\\\\Providers\\\\BookingsServiceProvider::class,
-    Kevupton\\\\Timetables\\\\Providers\\\\TimetablesServiceProvider::class"
-  #specify the seed class to seed the data
-  - export SEED_CLASS=TestSeeds::class
+    PrateekKathal\\\\SimpleCurl\\\\SimpleCurlServiceProvider::class,
   #specify the package to test
-  - export PACKAGE_NAME=kevupton/bookings
+  - export PACKAGE_NAME=prateekkathal/laravel-simplecurl
   #run the setup script
   - curl -s https://raw.githubusercontent.com/kevupton/docker-laravel-tests/master/setup.sh | bash
 
@@ -40,6 +35,4 @@ script:
   #script to setup the package for testing
   - cd laravel
   - composer update
-  - php artisan vendor:publish --force
-  - php artisan migrate --seed #setups the migrations and seeding
   - phpunit "vendor/$PACKAGE_NAME" #runs the phpunit just for your package.
