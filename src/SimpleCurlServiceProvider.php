@@ -4,15 +4,17 @@ namespace PrateekKathal\SimpleCurl;
 
 use Illuminate\Support\ServiceProvider;
 
-class SimpleCurlServiceProvider extends ServiceProvider {
+class SimpleCurlServiceProvider extends ServiceProvider
+{
 
   /**
    * Bootstrap the application services.
    *
    * @return void
    */
-  public function boot() {
-    //
+  public function boot()
+  {
+      //
   }
 
   /**
@@ -20,8 +22,9 @@ class SimpleCurlServiceProvider extends ServiceProvider {
    *
    * @return void
    */
-  public function register() {
-    $this->registerSimpleCurl();
+  public function register()
+  {
+      $this->registerSimpleCurl();
   }
 
   /**
@@ -29,10 +32,10 @@ class SimpleCurlServiceProvider extends ServiceProvider {
    *
    * @return SimpleCurl
    */
-  private function registerSimpleCurl() {
-    $this->app->bind('simplecurl', function ($app) {
-      return new SimpleCurl($app);
-    });
+  private function registerSimpleCurl()
+  {
+      $this->app->bind('simplecurl', function ($app) {
+          return new SimpleCurl($app);
+      });
   }
-
 }

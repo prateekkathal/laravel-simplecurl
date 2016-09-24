@@ -2,15 +2,16 @@
 
 namespace PrateekKathal\SimpleCurl;
 
-trait SimpleCurlTrait {
+trait SimpleCurlTrait
+{
 
   /**
    * Return apiAttributes Variable
    *
    * @return array
    */
-  public function getApiAttributes() {
-    return $this->apiAttributes;
+  public function getApiAttributes()
+  {
+      return $this->apiAttributes;
   }
-
 }
