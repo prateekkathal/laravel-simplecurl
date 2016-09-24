@@ -20,30 +20,30 @@ PrateekKathal\SimpleCurl\SimpleCurlServiceProvider::class,
 
 ## Request Functions
 
-|         Function Name          |     Return Type    |                   Example                 |
-|             ---                |       ---          |                     ---                   |
-|            get()               |     SimpleCurl     | SimpleCurl::get($url = '', $data = [], $headers = []) |
-|           post()               |     SimpleCurl     | SimpleCurl::post($url = '', $data = [], $headers = [], $file = false) |
-|            put()               |     SimpleCurl     | SimpleCurl::put($url = '', $data = [], $headers = []) |
-|          delete()              |     SimpleCurl     | SimpleCurl::delete($url = '', $data = [], $headers = []) |
+|         Function Name          |     Return Type    |                                 Example                                   |
+|             ---                |       ---          |                                   ---                                     |
+|            get()               |     SimpleCurl     |            SimpleCurl::get($url = '', $data = [], $headers = [])          |
+|           post()               |     SimpleCurl     |   SimpleCurl::post($url = '', $data = [], $headers = [], $file = false)   |
+|            put()               |     SimpleCurl     |           SimpleCurl::put($url = '', $data = [], $headers = [])           |
+|          delete()              |     SimpleCurl     |         SimpleCurl::delete($url = '', $data = [], $headers = [])          |
 
 ## Response Functions
-|         Function Name          |     Return Type    |                   Example                 |
-|             ---                |       ---          |                     ---                   |
-|        getResponse()           |       array        |   ['http_code' => 200, 'result' => ...]   |
-|        getResponseCode()       |       array        |   200   |
-|        getRequestUrl()         |      string        |   'http://mysite.com/api/v1/....'  |
-|        getRequestSize()        |        int         |   300   |
-|        getTotalTime()          |        int         |   0.2   |
-|    getResponseContentType()    |      string        |   'application/json'   |
-|       getRedirectCount()       |        int         |   0   |
-|       getEffectiveUrl()        |      string        |   'http://mysite.com/api/v1/....'   |
-|         getCurlError()         |      string        |   'URL is not properly formatted'            |
-|     getResponseAsArray()       |      array         |   ['id' => 1, 'name' => Prateek Kathal ...]   |
-|     getResponseAsJson()        |      json          |   {"id": 1, "name": "Prateek Kathal" ...}     |
-|   getResponseAsCollection()    |  Collection        | Collection => [ 0 => {"id": 1, "name": "Prateek Kathal" }... ] |
-|   getPaginatedResponse()       |LengthAwarePaginator| LengthAwarePaginator => [ 'total' => 10, per_page => 10, data => [ { "id": 1, "name": "Prateek Kathal" }... ] ] |
-|    getResponseAsModel()        |     Model          | User => { "attributes" : { "id": 1, "name": "Prateek Kathal" } } |
+|         Function Name          |     Return Type    |                                 Example                                   |
+|             ---                |        ---         |                                   ---                                     |
+|        getResponse()           |        array       |                 ['http_code' => 200, 'result' => ...]                     |
+|        getResponseCode()       |        array       |                                   200                                     |
+|        getRequestUrl()         |       string       |                      'http://mysite.com/api/v1/....'                      |
+|        getRequestSize()        |        int         |                                   300                                     |
+|        getTotalTime()          |        int         |                                   0.2                                     |
+|    getResponseContentType()    |       string       |                             'application/json'                            |
+|       getRedirectCount()       |        int         |                                    0                                      |
+|       getEffectiveUrl()        |       string       |                       'http://mysite.com/api/v1/....'                     |
+|         getCurlError()         |       string       |                       'URL is not properly formatted'                     |
+|     getResponseAsArray()       |       array        |                 ['id' => 1, 'name' => Prateek Kathal ...]                 |
+|     getResponseAsJson()        |       json         |                 {"id": 1, "name": "Prateek Kathal" ...}                   |
+|   getResponseAsCollection()    |    Collection      |     Collection => { [ 0 => {"id": 1, "name": "Prateek Kathal" }... ] }    |
+|   getPaginatedResponse()       |LengthAwarePaginator| LengthAwarePaginator => { 'total' => 10, per_page => 10, data => [ { "id": 1, "name": "Prateek Kathal" }... } ] |
+|    getResponseAsModel()        |     Model          |      User => { "attributes" : { "id": 1, "name": "Prateek Kathal" } }     |
 
 ## Making simple **GET/POST/PUT/DELETE** requests,
 
@@ -102,6 +102,24 @@ class UsersApiRepo {
 
 You may also use this function just for making things more **Laravel-like...**
 
+**Add this trait to your Model (say Photo)
+```php
+use PrateekKathal\SimpleCurl\SimpleCurlTrait;
+```
+
+** Then add these 2 things in your model**
+```php
+<?php
+
+class Photo extends Model {
+
+  use SimpleCurlTrait;
+
+  protected $apiAttributes = ['id', 'user_id', 'name', 'mime_type'];
+
+}
+```
+
 ```php
 function getUser($id) {
   /*
@@ -126,19 +144,20 @@ function getUser($id) {
    */
   $relations = [
     [
-      'photo' => 'App\Api\Photo'
+      'photo' => 'App\Photo'
     ],
     [
-      'city'=> 'App\Api\City',                  //This will work as city.state and give state as a relation to city
-      'state' => 'App\Api\State'
+      'city'=> 'App\City',                  //This will work as city.state and give state as a relation to city
+      'state' => 'App\State'
     ]
   ];
   $userModelWithPhotoAsRelation = SimpleCurl::get('http://mysite.com/api/v1/user/' .id. '/get/')->getResponseAsModel('App\User', [], $relations);
 }
 ```
 
-Please note that `getResponseAsModel()` is experimental and may not run for many cases if the responses are altered a lot before they are sent.
+Please note that `getResponseAsModel()` is experimental and may not run for many cases if the responses are altered a lot before they are sent. For eg - When you convert an attribute `created_at` into a separate format using `$casts` variable.
 
+Also, you can make a config file (say **config/relations.php**) and save all your relations in it and call separately.
 
 **With Config Variables**
 ```php
@@ -183,4 +202,4 @@ class UsersApiRepo {
 }
 ```
 
-You're most welcome! :smile: :sunglasses: :+1:
+You are most welcome to create pull requests and post issues! :smile: :sunglasses: :+1:
