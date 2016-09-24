@@ -6,7 +6,8 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class ResponseTransformer {
+class ResponseTransformer
+{
 
   /**
    * Response Variable
@@ -27,10 +28,11 @@ class ResponseTransformer {
    *
    * @param string $response
    */
-  public function setResponse($response, $dataKey = '') {
-    $this->response = $response;
-    $this->dataKey = (!empty($dataKey)) ? $dataKey : '';
-    return $this;
+  public function setResponse($response, $dataKey = '')
+  {
+      $this->response = $response;
+      $this->dataKey = (!empty($dataKey)) ? $dataKey : '';
+      return $this;
   }
 
   /**
@@ -38,12 +40,13 @@ class ResponseTransformer {
    *
    * @return JSON
    */
-  public function toJson() {
-    if(is_string($this->response)) {
-      $response = json_decode($this->response);
-      return ($response && !empty($this->dataKey)) ? (!empty($response->{$this->dataKey})) ? $response->{$this->dataKey} : null : $response;
-    }
-    return null;
+  public function toJson()
+  {
+      if (is_string($this->response)) {
+          $response = json_decode($this->response);
+          return ($response && !empty($this->dataKey)) ? (!empty($response->{$this->dataKey})) ? $response->{$this->dataKey} : null : $response;
+      }
+      return null;
   }
 
   /**
@@ -51,12 +54,13 @@ class ResponseTransformer {
    *
    * @return array
    */
-  public function toArray() {
-    if(is_string($this->response)) {
-      $response = json_decode($this->response, TRUE);
-      return ($response && !empty($this->dataKey)) ? (!empty($response[$this->dataKey])) ? $response[$this->dataKey] : null : $response;
-    }
-    return null;
+  public function toArray()
+  {
+      if (is_string($this->response)) {
+          $response = json_decode($this->response, true);
+          return ($response && !empty($this->dataKey)) ? (!empty($response[$this->dataKey])) ? $response[$this->dataKey] : null : $response;
+      }
+      return null;
   }
 
   /**
@@ -64,14 +68,15 @@ class ResponseTransformer {
    *
    * @return Collection
    */
-  public function toCollection($model = null) {
-    $response = $this->toJson();
+  public function toCollection($model = null)
+  {
+      $response = $this->toJson();
 
-    if($model && $response) {
-      return $this->responseArrayToModelCollection($model, $response);
-    }
+      if ($model && $response) {
+          return $this->responseArrayToModelCollection($model, $response);
+      }
 
-    return ($response) ? ($this->checkIfAllAreArray($response)) ? collect($response) : collect([$response]) : collect([]);
+      return ($response) ? ($this->checkIfAllAreArray($response)) ? collect($response) : collect([$response]) : collect([]);
   }
 
   /**
@@ -79,13 +84,15 @@ class ResponseTransformer {
    *
    * @return Collection
    */
-  public function toPaginated($perPage) {
-    $response = $this->toJson();
+  public function toPaginated($perPage)
+  {
+      $response = $this->toJson();
 
-    if(!isset($response->total, $response->per_page, $response->current_page, $response->data))
-      throw new \Exception('Missing Required Fields for Pagination');
+      if (!isset($response->total, $response->per_page, $response->current_page, $response->data)) {
+          throw new \Exception('Missing Required Fields for Pagination');
+      }
 
-    return new LengthAwarePaginator(
+      return new LengthAwarePaginator(
       collect($response->data), $response->total, $response->per_page,
       Paginator::resolveCurrentPage(), ['path' => Paginator::resolveCurrentPath()]
     );
@@ -98,28 +105,29 @@ class ResponseTransformer {
    *
    * @return boolean
    */
-  private function checkIfAllAreArray(array $response) {
-    foreach ($response as $key => $value) {
-      if(!is_object($value) || is_string($value)) {
-        return false;
-        break;
+  private function checkIfAllAreArray(array $response)
+  {
+      foreach ($response as $key => $value) {
+          if (!is_object($value) || is_string($value)) {
+              return false;
+              break;
+          }
       }
-    }
-    return true;
+      return true;
   }
 
   /**
    * Transform to a Specific Model
    *
    * @param  string $modelName
-   * @param  array $nonFillableKeys
    * @param  array $relations
    *
    * @return Model
    */
-  public function toModel($modelName, $nonFillableKeys = [], $relations = []) {
-    $response = $this->toJson();
-    return ($response) ? $this->toModelWithRelations($modelName, $response, $nonFillableKeys, $relations) : null;
+  public function toModel($modelName, $relations = [])
+  {
+      $response = $this->toJson();
+      return ($response) ? $this->toModelWithRelations($modelName, $response, $relations) : null;
   }
 
   /**
@@ -127,17 +135,17 @@ class ResponseTransformer {
    *
    * @param  string $modelName
    * @param  JSON $response
-   * @param  array $nonFillableKeys
    * @param  array $relations
    *
    * @return Model
    */
-  private function toModelWithRelations($modelName, $response, $nonFillableKeys = [], $relations = []) {
-    $model = $this->responseToModel($modelName, $response, $nonFillableKeys, $relations);
-    if(count($relations) > 0) {
-      $model = $this->responseToModelRelation($relations, $response, $model);
-    }
-    return $model;
+  private function toModelWithRelations($modelName, $response, $relations = [])
+  {
+      $model = $this->responseToModel($modelName, $response, $relations);
+      if (count($relations) > 0) {
+          $model = $this->responseToModelRelation($relations, $response, $model);
+      }
+      return $model;
   }
 
   /**
@@ -148,32 +156,37 @@ class ResponseTransformer {
    *
    * @return Model
    */
-  private function responseToModel($modelName, $response, $nonFillableKeys = [], $relations = []) {
-    $this->checkIfModelExists($modelName);
-    $model = new $modelName;
-    $fillableElements = $model->getFillable();
+  private function responseToModel($modelName, $response, $relations = [])
+  {
+      $this->checkIfModelExists($modelName);
+      $model = new $modelName;
 
-    if(is_array($response)) {
-      return $this->responseArrayToModelCollection($modelName, $response, $nonFillableKeys, $relations);
-    }
-
-    $modelKeys = array_filter($fillableElements, function($fillable) use ($response) {
-      foreach ($response as $key => $value) {
-        if($key == $fillable || $key == 'created_at' || $key == 'updated_at')
-          return $key;
+      if (method_exists($model, 'getApiAttributes')) {
+          $fillableElements = $model->getApiAttributes();
+      } else {
+          $fillableElements = $model->getFillable();
       }
-    });
 
-    $modelKeys = array_merge($modelKeys, $nonFillableKeys);
-
-    if(count($modelKeys) > 0) {
-      foreach($modelKeys as $modelKey) {
-        $value = isset($response->$modelKey) ? $response->$modelKey : null;
-        $model->setAttribute($modelKey, $value);
+      if (is_array($response)) {
+          return $this->responseArrayToModelCollection($modelName, $response, $relations);
       }
-    }
 
-    return $model;
+      $modelKeys = array_filter($fillableElements, function ($fillable) use ($response) {
+          foreach ($response as $key => $value) {
+              if ($key == $fillable || $key == 'created_at' || $key == 'updated_at') {
+                  return $key;
+              }
+          }
+      });
+
+      if (count($modelKeys) > 0) {
+          foreach ($modelKeys as $modelKey) {
+              $value = isset($response->$modelKey) ? $response->$modelKey : null;
+              $model->setAttribute($modelKey, $value);
+          }
+      }
+
+      return $model;
   }
 
   /**
@@ -184,34 +197,39 @@ class ResponseTransformer {
    *
    * @return Collection
    */
-  private function responseArrayToModelCollection($modelName, $response, $nonFillableKeys = [], $relations = []) {
-    $this->checkIfModelExists($modelName);
-    $model = new $modelName;
-    $fillableElements = $model->getFillable();
+  private function responseArrayToModelCollection($modelName, $response, $relations = [])
+  {
+      $this->checkIfModelExists($modelName);
+      $model = new $modelName;
 
-    $modelKeys = array_filter($fillableElements, function($fillable) use ($response) {
-      foreach ($response as $values) {
-        foreach ($values as $key => $modelValue) {
-          if($key == $fillable || $key == 'created_at' || $key == 'updated_at')
-            return $key;
-        }
+      if (method_exists($model, 'getApiAttributes')) {
+          $fillableElements = $model->getApiAttributes();
+      } else {
+          $fillableElements = $model->getFillable();
       }
-    });
 
-    $modelKeys = array_merge($modelKeys, $nonFillableKeys);
+      $modelKeys = array_filter($fillableElements, function ($fillable) use ($response) {
+          foreach ($response as $values) {
+              foreach ($values as $key => $modelValue) {
+                  if ($key == $fillable || $key == 'created_at' || $key == 'updated_at') {
+                      return $key;
+                  }
+              }
+          }
+      });
 
-    $newArray = [];
-    if(count($modelKeys) > 0) {
-      foreach($response as $key => $values) {
-        $model = new $modelName;
-        foreach($modelKeys as $modelKey) {
-          $value = isset($values->$modelKey) ? $values->$modelKey : null;
-          $model->setAttribute($modelKey, $value);
-        }
-        $newArray[] = $model;
+      $newArray = [];
+      if (count($modelKeys) > 0) {
+          foreach ($response as $key => $values) {
+              $model = new $modelName;
+              foreach ($modelKeys as $modelKey) {
+                  $value = isset($values->$modelKey) ? $values->$modelKey : null;
+                  $model->setAttribute($modelKey, $value);
+              }
+              $newArray[] = $model;
+          }
       }
-    }
-    return collect($newArray);
+      return collect($newArray);
   }
 
   /**
@@ -223,11 +241,12 @@ class ResponseTransformer {
    *
    * @return Model
    */
-  private function responseToModelRelation($relations, $response, $model) {
-    foreach($relations as $key => $relation) {
-      $model = $this->setRelations($relation, $response, $model);
-    }
-    return $model;
+  private function responseToModelRelation($relations, $response, $model)
+  {
+      foreach ($relations as $key => $relation) {
+          $model = $this->setRelations($relation, $response, $model);
+      }
+      return $model;
   }
 
   /**
@@ -239,36 +258,38 @@ class ResponseTransformer {
    *
    * @return Model
    */
-  private function setRelations($relation, $response, $model) {
-    $modelKey = array_keys($relation)[0];
+  private function setRelations($relation, $response, $model)
+  {
+      $modelKey = array_keys($relation)[0];
 
-    if(!isset($response->$modelKey)) {
-      return $model;
-    }
+      if (!isset($response->$modelKey)) {
+          return $model;
+      }
 
-    if(count($relation) == 1) {
-      return $model->setRelation($modelKey, $this->responseToModel(reset($relation), $response->$modelKey));
-    }
+      if (count($relation) == 1) {
+          return $model->setRelation($modelKey, $this->responseToModel(reset($relation), $response->$modelKey));
+      }
 
-    $currentRelations = array_keys($model->getRelations());
+      $currentRelations = array_keys($model->getRelations());
 
-    if(count($currentRelations) > 0) {
-      $relationalModels = array_filter($currentRelations, function($currentRelation) use ($response, $modelKey) {
-        foreach($response as $key => $value) {
-          if($key == $modelKey)
-            return $modelKey;
-        }
-      });
-      $newModel = $model->$modelKey;
-    } else {
-      $newModel = $this->responseToModel($relation[$modelKey], $response->$modelKey);
-    }
+      if (count($currentRelations) > 0) {
+          $relationalModels = array_filter($currentRelations, function ($currentRelation) use ($response, $modelKey) {
+              foreach ($response as $key => $value) {
+                  if ($key == $modelKey) {
+                      return $modelKey;
+                  }
+              }
+          });
+          $newModel = $model->$modelKey;
+      } else {
+          $newModel = $this->responseToModel($relation[$modelKey], $response->$modelKey);
+      }
 
-    $newRelation = $relation;
+      $newRelation = $relation;
 
-    unset($newRelation[$modelKey]);
+      unset($newRelation[$modelKey]);
 
-    return $model->setRelation($modelKey, $this->setRelations($newRelation, $response->$modelKey, $newModel));
+      return $model->setRelation($modelKey, $this->setRelations($newRelation, $response->$modelKey, $newModel));
   }
 
   /**
@@ -278,11 +299,11 @@ class ResponseTransformer {
    *
    * @return boolean
    */
-  private function checkIfModelExists($modelName) {
-    if(!class_exists($modelName)) {
-      throw new ModelNotFoundException('Class ' .$modelName. ' not found');
-    }
-    return TRUE;
+  private function checkIfModelExists($modelName)
+  {
+      if (!class_exists($modelName)) {
+          throw new ModelNotFoundException('Class ' .$modelName. ' not found');
+      }
+      return true;
   }
-
 }
