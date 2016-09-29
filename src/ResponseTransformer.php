@@ -107,12 +107,15 @@ class ResponseTransformer
    */
   private function checkIfAllAreArray(array $response)
   {
+      if(!empty($this->dataKey) && is_array($response)) return true;
+
       foreach ($response as $key => $value) {
           if (!is_object($value) || is_string($value)) {
               return false;
               break;
           }
       }
+
       return true;
   }
 
