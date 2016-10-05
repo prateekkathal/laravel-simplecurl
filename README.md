@@ -132,15 +132,11 @@ function getUser($id) {
   $userModel = SimpleCurl::get('http://mysite.com/api/v1/user/' .id. '/get/')->getResponseAsModel('App\User')
 
   /*
-   * Second parameter allows you to add keys which are present in response but not in fillable.
-   */
-  $userModelWithPhoto = SimpleCurl::get('http://mysite.com/api/v1/user/' .id. '/get/')->getResponseAsModel('App\User', ['photo'])
-
-  /*
-   * There is also a third parameter which you can use to add something from the response as a relation to it
+   * There is also a second parameter which you can use to add something from the response as a relation
+   * to it.
    *
-   * You will have to save a copy of the model somewhere so that SimpleCurl can get fillable fields from that class
-   * and use for relational Models as well.
+   * You will have to save a copy of the model somewhere so that SimpleCurl can get apiAttributes/fillable fields from
+   * that class and use for relational Models as well.
    */
   $relations = [
     [
@@ -151,7 +147,7 @@ function getUser($id) {
       'state' => 'App\State'
     ]
   ];
-  $userModelWithPhotoAsRelation = SimpleCurl::get('http://mysite.com/api/v1/user/' .id. '/get/')->getResponseAsModel('App\User', [], $relations);
+  $userModelWithPhotoAsRelation = SimpleCurl::get('http://mysite.com/api/v1/user/' .id. '/get/')->getResponseAsModel('App\User', $relations);
 }
 ```
 
