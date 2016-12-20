@@ -2,12 +2,10 @@
 
 namespace PrateekKathal\SimpleCurl;
 
-use \Exception;
 use PrateekKathal\SimpleCurl\ResponseTransformer;
 
 class SimpleCurl
 {
-
     /**
      * Config Variable
      *
@@ -41,16 +39,9 @@ class SimpleCurl
      *
      * @param string $app
      */
-    public function __construct()
+    public function __construct(array $config = [])
     {
-        $this->config = [
-          'connectTimeout' => 10,
-          'dataTimeout' => 30,
-          'userAgent' => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
-          'baseUrl' => '',
-          'defaultHeaders' => [],
-          'defaultDataKey' => '',
-        ];
+        $this->setConfigParams($config);
         $this->response = $this->url = '';
         $this->headers = [];
         $this->responseTransformer = new ResponseTransformer;
@@ -114,45 +105,55 @@ class SimpleCurl
     }
 
     /**
+     * Get Config Variables
+     *
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
+     * Return a new class with own config Variables
+     *
+     * @param  array $config
+     *
+     * @return PrateekKathal/SimpleCurl/SimpleCurl
+     */
+    public function setConfig(array $config = [])
+    {
+        return new self($config);
+    }
+
+    /**
      * Set Config Variables
      *
      * @param  array $config
      *
-     * @return SimpleCurl
+     * @return array
      */
-    public function setConfig($config = [])
+    public function setConfigParams($config = [])
     {
         $this->resetConfig();
+
         foreach ($config as $key => $value) {
             switch ($key) {
                 case 'connectTimeout':
-                  $this->validateInputs('connectTimeout', $config['connectTimeout']);
-                  $this->config['connectTimeout'] = $config['connectTimeout'];
-                  break;
                 case 'dataTimeout':
-                  $this->validateInputs('dataTimeout', $config['dataTimeout']);
-                  $this->config['dataTimeout'] = $config['dataTimeout'];
-                  break;
                 case 'userAgent':
-                  $this->validateInputs('userAgent', $config['userAgent']);
-                  $this->config['userAgent'] = $config['userAgent'];
-                  break;
                 case 'baseUrl':
-                  $this->validateInputs('baseUrl', $config['baseUrl']);
-                  $this->config['baseUrl'] = $config['baseUrl'];
-                  break;
                 case 'defaultHeaders':
-                  $this->validateInputs('defaultHeaders', $config['defaultHeaders']);
-                  $this->config['defaultHeaders'] = $config['defaultHeaders'];
-                  break;
                 case 'defaultDataKey':
-                  $this->validateInputs('defaultDataKey', $config['defaultDataKey']);
-                  $this->config['defaultDataKey'] = $config['defaultDataKey'];
+                case 'parseErrors':
+                  $this->validateInputs($key, $config[$key]);
+                  $this->config[$key] = $config[$key];
                   break;
                 default: break;
             }
         }
-        return $this;
+
+        return $this->config;
     }
 
     /**
@@ -169,6 +170,7 @@ class SimpleCurl
           'baseUrl' => '',
           'defaultHeaders' => [],
           'defaultDataKey' => '',
+          'parseErrors' => true,
         ];
         return $this;
     }
@@ -356,6 +358,16 @@ class SimpleCurl
     }
 
     /**
+     * Check if `parseErrors` key is true
+     *
+     * @return string
+     */
+    public function isErrorParsed()
+    {
+        return $this->config['parseErrors'];
+    }
+
+    /**
      * GET Response as JSON
      *
      * @return JSON
@@ -363,7 +375,7 @@ class SimpleCurl
     public function getResponseAsJson()
     {
         return $this->responseTransformer
-                    ->setResponse($this->getResponse(), $this->getDataKey())
+                    ->setResponse($this->getResponse(), $this->getDataKey(), $this->isErrorParsed())
                     ->toJson();
     }
 
@@ -375,7 +387,7 @@ class SimpleCurl
     public function getResponseAsArray()
     {
         return $this->responseTransformer
-                    ->setResponse($this->getResponse(), $this->getDataKey())
+                    ->setResponse($this->getResponse(), $this->getDataKey(), $this->isErrorParsed())
                     ->toArray();
     }
 
@@ -387,7 +399,7 @@ class SimpleCurl
     public function getResponseAsCollection($model = null)
     {
         return $this->responseTransformer
-                    ->setResponse($this->getResponse(), $this->getDataKey())
+                    ->setResponse($this->getResponse(), $this->getDataKey(), $this->isErrorParsed())
                     ->toCollection($model);
     }
 
@@ -401,7 +413,7 @@ class SimpleCurl
     public function getResponseAsModel($modelName, $relations = [])
     {
         return $this->responseTransformer
-                    ->setResponse($this->getResponse(), $this->getDataKey())
+                    ->setResponse($this->getResponse(), $this->getDataKey(), $this->isErrorParsed())
                     ->toModel($modelName, $relations);
     }
 
@@ -415,7 +427,7 @@ class SimpleCurl
     public function getPaginatedResponse($perPage = 10)
     {
         return $this->responseTransformer
-                    ->setResponse($this->getResponse(), $this->getDataKey())
+                    ->setResponse($this->getResponse(), $this->getDataKey(), $this->isErrorParsed())
                     ->toPaginated($perPage);
     }
 
@@ -538,6 +550,12 @@ class SimpleCurl
             case 'defaultDataKey':
               if (!is_string($data)) {
                   throw new \Exception('Default Data Key must be a string');
+              }
+
+              break;
+            case 'parseErrors':
+              if (!is_bool($data)) {
+                  throw new \Exception('Parse Errors must be a boolean');
               }
 
               break;
