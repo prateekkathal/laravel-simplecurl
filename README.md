@@ -53,11 +53,13 @@ PrateekKathal\SimpleCurl\SimpleCurlServiceProvider::class,
 
 use SimpleCurl;
 
-class UsersApiRepo {
+class UsersApiRepo
+{
 
-  function allUsers() {
+  function allUsers()
+  {
     // Gives Response As Array
-    $usersArray = SimpleCurl::get('http://mysite.com/api/v1/user/all')->getPaginatedResponse();
+    $usersArray = SimpleCurl::get('http://mysite.com/api/v1/user/all')->getResponseAsArray();
 
     // Or (Gives Response As Json)
     $usersJson = SimpleCurl::get('http://mysite.com/api/v1/user/all')->getResponseAsJson();
@@ -66,10 +68,11 @@ class UsersApiRepo {
     $usersCollection = SimpleCurl::get('http://mysite.com/api/v1/user/all')->getResponseAsCollection();
 
     // Or (Gives Response As LengthAwarePaginator, if the response is paginated)
-    $usersPaginated = $simpleCurl->get('http://mysite.com/api/v1/user/all')->getPaginatedResponse();
+    $usersPaginated = SimpleCurl::get('http://mysite.com/api/v1/user/all')->getPaginatedResponse();
   }
 
-  function storeUser() {
+  function storeUser()
+  {
     $url = 'http://mysite.com/api/v1/user/store';
     $inputs = [
       'name' => 'Prateek Kathal',
@@ -80,7 +83,8 @@ class UsersApiRepo {
     $usersJson = SimpleCurl::post($url, $inputs, $headers, true)->getResponseAsJson();
   }
 
-  function updateUser($id) {
+  function updateUser($id)
+  {
     // Please note that CURL does not support posting Images/Files via PUT requests.
     $url = 'http://mysite.com/api/v1/user/' .$id. '/update';
     $headers = ['Authorization: Bearer tokenForAuthorization'];
@@ -90,7 +94,8 @@ class UsersApiRepo {
     $usersJson = SimpleCurl::put($url, $inputs, $headers)->getResponseAsJson();
   }
 
-  function deleteUser($id) {
+  function deleteUser($id)
+  {
     // Please note that CURL does not support posting Images/Files via PUT requests.
     $url = 'http://mysite.com/api/v1/user/' .$id. '/delete';
     $headers = ['Authorization: Bearer tokenForAuthorization'];
@@ -111,17 +116,17 @@ use PrateekKathal\SimpleCurl\SimpleCurlTrait;
 ```php
 <?php
 
-class Photo extends Model {
-
+class Photo extends Model
+{
   use SimpleCurlTrait;
 
   protected $apiAttributes = ['id', 'user_id', 'name', 'mime_type'];
-
 }
 ```
 
 ```php
-function getUser($id) {
+function getUser($id)
+{
   /*
    * Please ensure only a single Model is present in the response for this. Multiple rows will not be
    * automatically get converted into Collections And Models atm.
@@ -161,7 +166,8 @@ Also, you can make a config file (say **config/relations.php**) and save all you
 
 use SimpleCurl;
 
-class UsersApiRepo {
+class UsersApiRepo
+{
 
   /*
    * A Config Variable which you can use to handle multiple CURL requests...
@@ -180,7 +186,8 @@ class UsersApiRepo {
     ];
   }
 
-  function allUsers() {
+  function allUsers()
+  {
     // Set Defaults for making a CURL Request
     $simpleCurl = SimpleCurl::setConfig($this->simpleCurlConfig);
 
