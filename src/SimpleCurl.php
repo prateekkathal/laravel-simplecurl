@@ -166,7 +166,7 @@ class SimpleCurl
         $this->config = [
           'connectTimeout' => 10,
           'dataTimeout' => 30,
-          'userAgent' => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
+          'userAgent' => request()->header('User-Agent'),
           'baseUrl' => '',
           'defaultHeaders' => [],
           'defaultDataKey' => '',
