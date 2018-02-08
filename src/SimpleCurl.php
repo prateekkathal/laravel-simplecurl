@@ -475,7 +475,11 @@ class SimpleCurl
             }
             if ($type == 'PUT' || $type == 'DELETE') {
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $type);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+                if (!empty($file) || in_array('Content-Type: application/json', $headers)) {
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+                } else {
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+                }
             }
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
