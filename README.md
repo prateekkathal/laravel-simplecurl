@@ -194,6 +194,9 @@ class UsersApiRepo
     // or if you just want to set base url
     // $simpleCurl = SimpleCurl::setBaseUrl($this->simpleCurlConfig['baseUrl']);
 
+    // you can also change the default UserAgent
+    // $simpleCurl = SimpleCurl::setUserAgent("Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)");
+
     // Gives Response As Array
     $usersArray = $simpleCurl->get('api/v1/users/all')->getResponseAsArray();
 

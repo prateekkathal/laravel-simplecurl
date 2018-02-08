@@ -166,7 +166,7 @@ class SimpleCurl
         $this->config = [
           'connectTimeout' => 10,
           'dataTimeout' => 30,
-          'userAgent' => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
+          'userAgent' => request()->header('User-Agent'),
           'baseUrl' => '',
           'defaultHeaders' => [],
           'defaultDataKey' => '',
@@ -210,6 +210,18 @@ class SimpleCurl
     {
         $this->validateInputs('defaultHeaders', $headers);
         $this->config['defaultHeaders'] = $headers;
+        return $this;
+    }
+
+    /**
+     * Set User Agent Key
+     *
+     * @param string $key
+     */
+    public function setUserAgent($headers)
+    {
+        $this->validateInputs('userAgent', $headers);
+        $this->config['userAgent'] = $headers;
         return $this;
     }
 
