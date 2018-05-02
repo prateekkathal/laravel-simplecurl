@@ -179,6 +179,7 @@ class UsersApiRepo
       'connectTimeout' => 30,
       'dataTimeout' => 60,
       'baseUrl' => 'http://mysite.com/',
+      'buildQuery' => false,
       'defaultHeaders' => [
         'Authorization: Bearer {bearer_token}',
         'Content-Type: application/json'

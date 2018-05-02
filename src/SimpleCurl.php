@@ -143,6 +143,7 @@ class SimpleCurl
                 case 'dataTimeout':
                 case 'userAgent':
                 case 'baseUrl':
+                case 'buildQuery':
                 case 'defaultHeaders':
                 case 'defaultDataKey':
                 case 'parseErrors':
@@ -168,6 +169,7 @@ class SimpleCurl
           'dataTimeout' => 30,
           'userAgent' => request()->header('User-Agent'),
           'baseUrl' => '',
+          'buildQuery' => true,
           'defaultHeaders' => [],
           'defaultDataKey' => '',
           'parseErrors' => true,
@@ -204,7 +206,7 @@ class SimpleCurl
     /**
      * Set Default Data Key
      *
-     * @param string $key
+     * @param string $headers
      */
     public function setDefaultHeaders($headers)
     {
@@ -216,12 +218,24 @@ class SimpleCurl
     /**
      * Set User Agent Key
      *
-     * @param string $key
+     * @param string $userAgent
      */
-    public function setUserAgent($headers)
+    public function setUserAgent($userAgent)
     {
-        $this->validateInputs('userAgent', $headers);
-        $this->config['userAgent'] = $headers;
+        $this->validateInputs('userAgent', $userAgent);
+        $this->config['userAgent'] = $userAgent;
+        return $this;
+    }
+
+    /**
+     * Set Build Query Key
+     *
+     * @param boolean $buildQuery
+     */
+    public function setBuildQuery($buildQuery = true)
+    {
+        $this->validateInputs('buildQuery', $buildQuery);
+        $this->config['buildQuery'] = $buildQuery;
         return $this;
     }
 
@@ -472,7 +486,7 @@ class SimpleCurl
             }
             if (!empty($file) || in_array('Content-Type: application/json', $headers)) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-            } else {
+            } else if($this->config['buildQuery']) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
             }
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
@@ -541,6 +555,17 @@ class SimpleCurl
 
               break;
             case 'baseUrl':
+              if (!is_string($data)) {
+                  throw new \Exception('Base URL must be a string');
+              }
+
+              break;
+            case 'buildQuery':
+              if (!is_bool($data)) {
+                  throw new \Exception('Build Query must be a boolean');
+              }
+
+              break;
             case 'fullUrl':
               if (empty($data)) {
                   throw new \Exception('URL must not be empty');
