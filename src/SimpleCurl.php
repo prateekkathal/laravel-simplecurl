@@ -198,7 +198,7 @@ class SimpleCurl
      */
     public function setDataKey($key)
     {
-        $this->validateInputs('defaultDataKey', $url);
+        $this->validateInputs('defaultDataKey', $key);
         $this->config['defaultDataKey'] = $key;
         return $this;
     }
